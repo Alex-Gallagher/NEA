@@ -1,0 +1,77 @@
+After reading about lenia, tried generalising it before realising its potential isomorphism with neural networks ( https://www.youtube.com/watch?v=jGCvY4gNnA8 ). I came up with the following formula, before finding this ( https://arxiv.org/pdf/1809.02942 ) paper that iterates the ideas I came up with; \\
+
+let there be some function E (and asume all elements of D are invertable);\\
+
+\[E: \{F_{\alpha}(0,r_{t}), C, H, K, G, D, \zeta_{0,\alpha}\} \forall \alpha,r_{t} \to F\]
+
+where;
+
+\[\frac{\partial F_{C_{o}}(t,r_{t})}{\partial t} = \left[ \sum_{C_{i}}^{|C|} \sum_{j}^{|H(S)|} G_{S,j} \left( [ F_{C_{i}}(t,\underline{z}) * K_{S,j}(\underline{z}) ] [r'_{t}] \right) \right]_{-F_{C_{o}}(t,r_{t})}^{1-F_{C_{o}}(t,r_{t})}\]
+
+I claim that the function E can then produce a system F of either Neural Networks (NN) , Cellular Automata (CA), intertwined fourier transforms, or just simply a convolution depending on its inputs.\\
+
+I will now describe what every part of this expression represents from the NN point of view, then the CA point of view sequentially\\
+
+NN: \(F_{\alpha}(t,r_{t})\) evaluates to the activation of a certain node (\(r_{t} \in \zeta_{t,\alpha}\)) of the \(\alpha\)'th neural network (there are multiple in a way where they influence one another, as the layer of one NN may effect the next layer of a different NN, or in other words, the layers are intertwined) at some layer (\(t \in \mathbb{R}\)). \(\zeta_{t,\alpha}\) is the space of every node in a layer, usually some \([m \times n]\) matrix in the case of NNs. \(\zeta_{t,\alpha}\) is dependent on t and \(\alpha\) as layer sizes can vary depending on those. F is the set of all functions that return the activation.\\
+
+CA: \(F_{\alpha}(t,r_{t})\) evaluates to the activation of a certain point (\(r_{t} \in \zeta_{t,\alpha}\)) of the \(\alpha\)'th species/channel of lenia at some time (\(t \in \mathbb{R}\)). \(\zeta_{t,\alpha}\) is the space that is the lattice or grid, usually \(\mathbb{R}^2\) in the case of CA. \(\zeta_{t,\alpha}\) is dependent on t and \(\alpha\) to maintain isomorphism, but you may imagine it as the space that contains the CA changing with time and different species/channel. F is the set of all functions that return the activation;\\
+
+\[F_{\alpha}: \mathbb{R},\zeta_{t,\alpha} \to \mathbb{R} : F_{\alpha} \in F \]
+
+NN: \(C\) is the set of all intertwined NNs, where \(C_{o}\) is the NN whose activation is being calculated, that is dependent on some other NN (or itself, \(C_{i}\)) of many that it is dependent on. \(C_{i}\) is just the current NN whose weight on \(C_{o}\) is being calculated.\\
+
+CA: \(C\) is the set of all species/channels, where \(C_{o}\) is the channel whose activation is currently being calculated, and \(C_{i}\) is some channel whose current effect on \(C_{o}\) is being calculated;\\
+
+\[C_{o},C_{i} \in C\]
+
+(Note that \(|C|\) is the cardinality of C)\\
+
+NN: S is the state of a calculation, a set that contains the properties that are unique to a set of weight layers at their point of use, containing the current layer (t, containing the input NN (\(C_{i}\)), the node (\(r_{t}\)) in the output NN whose value is being calculated, then the output (\(C_{o}\)) and input (\(C_{i}\)) NNs respectively. One way to visualise this is that some weight layer is being convoluted with NN \(C_{i}\) that is in layer t, whose calculation is contributing to the activation of node \(r_{t}\) in NN \(C_{o}\) in some following layer. Supersets of terms have been defined previously.\\
+
+CA: S is the state of a calculation, a set that contains the properties that are unique to a set of kernels at their point of application, containing the current time (t), the point (\(r_{t}\)) in the output species/channel whose value is being calculated, then the output (\(C_{o}\)) and input (\(C_{i}\)) species/channels respectively. One way to visualise this is that some kernel is being convoluted with species/channel \(C_{i}\) at some time t, in order to calculate the activation of point \(r_{t}\) in species/channel \(C_{o}\) at some later time. Supersets of terms have been defined previously;\\
+
+\[S=\{t, r_{t}, C_{o}, C_{i}\}\]
+
+NN: \(H(S)\) evaluates to an ordered set of pairs of weight layers and their respective activation functions that apply to a specific state. These may not be combined into a single weight layer and activation function as the activation function is not necessarily a linear operator. Sets K and G will be explained later.\\
+
+CA: \(H(S)\) evaluates to an ordered set of pairs of kernels and their respective growth functions that apply to a specific state. These may not be combined into a single kernel and growth function as the growth function is not necessarily a linear operator. Sets K and G will be explained later;\\
+
+\[H: \{ \mathbb{R},\zeta_{t,\alpha}, C, C \} \to (K \sim G)_{S} \subseteq (K \sim G) \]
+
+(Note that \((K \sim G)_{S}\) is the set of all binary relations of K and G, with \((K \sim G)_{S}\) being a subset of it containing all pairs that apply at state S. Also note that \(|H(S)|\) is the cardinality of H(S))\\
+
+NN: \(G_{S,\beta}(\gamma)\) is the \(\beta\)'th activation function to be used in calculating at state S once the result of the convolution (\(\gamma\)) has been calculated. Usually either a ridge, radial, or fold function. G is the set of all activation functions.\\
+
+CA: \(G_{S,\beta}(\gamma)\) is the \(\beta\)'th growth function to be used in calculating at state S once the result of the convolution (\(\gamma\)) has been calculated. Usually some variation of a Gaussian function shifted and scaled to the desired form. G is the set of all growth functions;\\
+
+\[ G_{S,\beta}: \mathbb{R} \to \mathbb{R} : G_{S,\beta} \in G \]
+
+NN: \(r_{t}'\) is the corresponding node from the same NN (\(C_{o}\)) to \(r_{t}\) in a previous layer (\(\gamma\)), and thus may be seen as the result of applying some function \(D_{t,\alpha}\) to \(r_{t}\). In stating it in this way, we show that the correspondence is maintained as an isomorphism as we move across the layers. An example of this may be the 1st node in one layer corresponds to the 1st node in the previous layer. Thus we would find D by seeing how the domains of the elements of F change with time. D is the set of all functions in the form \(D_{t,\alpha}\) defined this way.\\ 
+
+CA: \(r_{t}'\) is the corresponding point from the same species/channel (\(C_{o}\)) as \(r_{t}\) at a previous point in time (\(\gamma\)), and thus may be seen as the result of applying some function \(D_{t,\alpha}\) to \(r_{t}\). In stating it in this way, we show that the correspondence is maintained as an isomorphism with time. An example of this is that the activation at coordinates (x,y) correspond to the activation of the same point (x,y) at a previous time. Thus we would find D by seeing how the domains of the elements of F change with time. D is the set of all functions in the form \(D_{t,\alpha}\) defined this way;\\
+
+\[D_{t,\alpha}: \zeta_{t,\alpha} \to \zeta_{\gamma,\alpha} : D_{t,\alpha} \in D\]
+
+(where \(\gamma\) precedes t)\\
+
+NN: \([A*B][\tau] = [A(...,\underline{t})*B(...,\underline{t})][\tau]\) is a convolution between A and B in t, parameterised by \(\tau\). Importantly, t and \(\tau\) must have the same domain for the convolution to be possible. In the case of NN, A and B are usually an input activation layer and weight layer respectively. You can think of the parameter \(\tau\) as the displacement of the weight layer over a certain node (in this example the weight would be higher near the first node, with the displacement being over the \(r_{t}'\)) in the input activation layer such that the nodes closest to \(r_{t}'\) in the previous layer effect \(r_{t}\) the most.\\
+
+CA: \([A*B][\tau] = [A(...,\underline{t})*B(...,\underline{t})][\tau]\) is a convolution between A and B in t, parameterised by \(\tau\). Importantly, t and \(\tau\) must have the same domain for the convolution to be possible. In the case of CA, A and B are usually the activation space and kernel respectively. You can think of the parameter \(\tau\) as displacing the kernel to be over the \(r_{t}'\) at the previous time step so that \(r_{t}\) is effected the most by the points that were local to its corresponding point (\(r_{t}'\)) in the past.\\
+
+\[[A*B][\tau] = [A(...,\underline{t})*B(...,\underline{t})][\tau] =\]
+
+\[\int_{\eta} A(...,t)B(...,\tau-t)dt | \{ t,\tau \in \eta \} \]
+
+(In the case of the general CA/NN formula, the set \(\eta\) is actually defined by what would be t - the input \underline{z} to \(F_{C_{i}}(t,\underline{z})\), with \(\tau\) then depending on \(\eta\) - this is due to the fact that we calculate elements of D backwards, as D describes how the domains of the elements of F change when you move back in time. As a fourier transform is just a parameterised convolution, we can package that in here too for fun!)\\
+
+NN: \(K_{S,\beta}(\epsilon)\) is the \(\beta\)'th weight layer to be used in calculating at state S, where it is convoluted with some element of \(F\). The function evaluates to the weight of the single node \(\epsilon \in \theta\). In terms of previously defined sets; \(\theta = \zeta_{\gamma,\alpha}\). K is the set of all weight layers.\\
+
+CA: \(K_{S,\beta}(\epsilon)\) is the \(\beta\)'th kernel to be used in calculating at state S, where it is convoluted with some element of \(F\). The function evaluates to the strength of the kernel at a point \(\epsilon \in \theta\). In terms of previously defined sets; \(\theta = \zeta_{\gamma,\alpha}\). K is the set of all kernels;\\
+
+\[ K_{S,\beta}: \theta \to \mathbb{R} : K_{S,\beta} \in K\]
+
+... and we are done!\\
+
+Some interesting things to take away; This means that by expressing NNs in the form of how we render CA, we may be able to gain insight into how they process data, perhaps in a similar way to mechanistic interpretation. This also means that, like what was done in the paper mentioned at the start, you can "train" a CA to begin with a certain input and generate a desired end result/state.
+
+oh and also im fairly sure you can extend this similarly to how normal Lenia is to flow-Lenia - https://arxiv.org/pdf/2212.07906 - among other silly things, such as changing every set \(\mathbb{R}\) to have a higher dimension. I however have not messed around much with such ideas.
