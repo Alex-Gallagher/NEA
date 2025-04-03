@@ -1,8 +1,16 @@
 const { spawn } = require('child_process');
 
-function runPythonScript(scriptPath, input) {
+const button = document.querySelector("#button");
 
-    const prog = spawn('python', [scriptPath].concat(input));
+// is [] in this necessary?
+button.onclick = script([]);
+
+
+
+
+function script(input) {
+
+    const prog = spawn('python', ['/backend/testing.py'].concat(input));
 
     prog.stdout.on('data', (out) => {
         console.log(out);
@@ -16,5 +24,3 @@ function runPythonScript(scriptPath, input) {
         console.log('EXIT; ', code);
     });
 }
-
-runPythonScript('/backend/testing.py', []);
