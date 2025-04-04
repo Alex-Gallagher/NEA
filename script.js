@@ -5,22 +5,15 @@ const button = document.querySelector("#button");
 // is [] in this necessary?
 button.onclick = script([]);
 
+button.innerText = '';
 
 
+function script() {
+    fetch('https://alex-gallagher.github.io/NEA/run-python')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.output);
+        })
+        .catch(error => console.error('Error:', error));
+};
 
-function script(input) {
-
-    const prog = spawn('python', ['/backend/testing.py'].concat(input));
-
-    prog.stdout.on('data', (out) => {
-        console.log(out);
-    });
-
-    prog.stderr.on('data', (err) => {
-        console.log('ERROR; ', err);
-    });
-
-    prog.on('close', (code) => {
-        console.log('EXIT; ', code);
-    });
-}
