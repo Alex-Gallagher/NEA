@@ -1,6 +1,21 @@
-const { spawn } = require('child_process');
-const express = require('express');
-const cors = require('cors');
+var http = require('http');
+var fs = require('fs');
+var index = fs.readFileSync('index.html');
+var script = fs.readFileSync('script.js');
+
+const PORT = 3000;
+
+http.createServer(function (req, res) {
+  if (req.path.endsWith('script.js')) {
+    res.writeHead(200, {'Content-Type': 'text/javascript'});
+    res.end(script);
+  } else {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(index);
+  }
+}).listen(PORT);
+
+console.log(`Listening on port ${PORT}`);
 
 const app = express();
 app.use(cors());  // Allow cross-origin requests
