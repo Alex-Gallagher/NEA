@@ -11,98 +11,179 @@ import random
 
 width = 2
 dimensions = 2
-layerCount = 1
-weightLayers = []
+layerCount = 2
+
+weightLayersMatrix = [ [ [
+(random.random() - 1) for k in range(width)
+] for j in range(width)
+] for i in range(layerCount)
+] # weightLayers[i][j][k] for each element, a list of j by k matrices. thus the index of the matrix is reading the iteration loops upwards
 
 
 #funcs
 
-def RecusiveWeightLayersConstruction(mat, dim):
+def TrainingFunction(X):
 
-    dim -= 1
+    total = 0
 
-    mat.append()
+    for (i, dummy2) in enumerate(X):
 
-    if dim > 0:
+        for (j, dummy3) in enumerate(X[0]):
+        
+            total += X[i][j]
 
-        for i in range(width):
+    output = [ [
+    total for (j, dummy1) in enumerate(X[0])
+    ] for (i, dummy2) in enumerate(X)
+    ]
 
-            mat.append(RecusiveWeightLayersConstruction([],dim))
+    return output
+
+def Costfunction(observedMatrix, expectedMatrix):
+
+    costVar = 1
+
+    cost = 0
+
+    if len(observedMatrix) == len(expectedMatrix) and len(observedMatrix[0]) == len(expectedMatrix[0]):
             
+        for (i, dummy1) in enumerate(expectedMatrix):
+        
+            for (j, dummy2) in enumerate(expectedMatrix[0]):
+
+                cost += costVar * (expectedMatrix[i][j] - observedMatrix[i][j])**2
+
     else:
 
-        return random.random
+        print("OUTPUT WIDTH DISPARITY ERROR")
+
+        print("OBSERVED;", observedMatrix)
+
+        print("EXPECTED;", expectedMatrix)
+
+        print("-----------------------")
+    
+    return cost
 
 
-def WeightLayersConstruction():
 
-    for i in range(layerCount):
 
-        weightLayers.append(RecusiveWeightLayersConstruction([],dimensions))
 
-def ActivationFunc(input):
-    if input >= 0:
-        return 1
+def WeightLayersFunction(i=-1, j=-1, k=-1): # encode matrix as a function, where default arguements behave as matrix does
+    if i == -1:
+        return weightLayersMatrix
+    elif j == -1:
+        return weightLayersMatrix[i]
+    elif k == -1:
+        return weightLayersMatrix[i][j]
     else:
-        return 0
+        return weightLayersMatrix[i][j][k]
 
-def MatMul_Activation(X, Y):
+def ActivationFunc(input): #sigmoid
+    if input >= 1000:
+        result = 1
+    elif input <= -1000:
+        result = 0
+    else:
+        result = (1 + (2**(-input)) )**(-1)
+    return result
 
-    Z = []
+def MatMul_Activation(X, Y): 
 
-    for a in range(len(X)):
-        Z.append([])
+    Z = [ [
+    0 for (j, dummy1) in enumerate(Y[0])
+    ] for (i, dummy2) in enumerate(X)
+    ] # i use enumerate here so that range(len()) is not required
 
+    if len(X[0]) == len(Y):
+            
+        for (i, dummy1) in enumerate(X):
+        
+            for (j, dummy2) in enumerate(Y[0]):
 
-    for a in range(len(X)):
-        for b in range(len(Y[0])):
-            sum = 0
-            for i in range(len(Y)):
-                sum += X[a][i] * Y[i][b]
+                for (k, dummy3) in enumerate(Y):
+                
+                    Z[i][j] += X[i][k] * Y[k][j]
+                
+                Z[i][j] = ActivationFunc(Z[i][j])
 
-            Z[a].append(ActivationFunc(sum))
+    else:
+
+        print("MULT WIDTH DISPARITY ERROR")
+
+        print("LEFT;", X)
+
+        print("RIGHT;", Y)
+
+        print("-----------------------")
 
     return Z
 
-def Computation(input):
+def Computation(weightLayers, input):
     
     currentInput = input
 
-    for i in range(len(weightLayers)):
-        currentInput = MatMul_Activation(currentInput, weightLayers[i])
+    for (k,dummy1) in enumerate(weightLayers):
+        currentInput = MatMul_Activation(weightLayers[k], currentInput)
 
     # fix this please ftlog
 
-    sum = 0
+    return currentInput
 
-    for i in range(len(currentInput)):
-        for j in range(len(currentInput[0])):
-            sum += currentInput[i][j]
 
-    return sum
+def CostCalc(weightLayers, input):
+    return Costfunction(Computation(weightLayers,input), TrainingFunction(input))
 
-'''
-#cool but useless
-def FindMatrixDimention(matrix):
-    count = 0
-    while (type(matrix) == list) and (len(matrix) > 0):
-        if len(matrix) > 1:
-            count += 1
-        matrix = matrix[0]
-    return count
-#'''
 
 # main prog
 
-inputVector = [[1,1]]
+inputMatrix = [
+[ 1
+] for i in range(width)
+] # i by 1 matrix (vector)
 
-WeightLayersConstruction()
+minCost = 0.1
+prevCost = 0
+newCost = 9999
+prevweightLayersMatrix = []
 
-print(weightLayers)
+while CostCalc(WeightLayersFunction(),inputMatrix) > minCost:
 
-#print(Computation(inputVector))
+    prevCost = newCost
+
+    prevweightLayersMatrix.clear()
+    prevweightLayersMatrix.extend(weightLayersMatrix)
+
+            
+    for (i, dummy1) in enumerate(WeightLayersFunction()):
+    
+        for (j, dummy2) in enumerate(WeightLayersFunction(i)):
+
+            for (k, dummy3) in enumerate(WeightLayersFunction(i,j)):
+
+                weightLayersMatrix[i][j][k] += (0.5*prevCost**2) * random.random() - 0.5
+    
+    newCost = CostCalc(WeightLayersFunction(),inputMatrix)
+
+    if newCost > prevCost:
+
+        weightLayersMatrix.clear()
+        weightLayersMatrix.extend(prevweightLayersMatrix)
+
+        newCost = prevCost
+
+    print(newCost)
+
+print(WeightLayersFunction())
 
 
+#print(inputMatrix)
+
+#print(TrainingFunction(inputMatrix))
+
+#print(Computation(WeightLayersFunction(),inputMatrix))
+
+#print(CostCalc(WeightLayersFunction(),inputMatrix))
 
 
 # need to add cost func (ie a func that you wish the nn to imitate and then make a cost func, and for now just implement random changes and 
