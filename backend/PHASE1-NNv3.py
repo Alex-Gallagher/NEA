@@ -65,11 +65,13 @@ class iteratorClass:
                 if num + 1 < input1Order + input2Order - (2 * cancelledNum): #need array containing var to change so that can change output via linked slice
                     indexesOutput.append(index)
                     currentElementOutput = currentElementOutput[index] # move down one "layer" in the output
+
+            indexesOutput.append(index) # add final index that was skipped for sake of remaining one layer above
             
             if type(currentElementOutput.tolist()) == list:
                 currentElementOutput[index] = self.function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput )
             else:
-                currentElementOutput = self.function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput )
+                currentElementOutput += self.function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput )
 
             #print(currentElementOutput)
 
@@ -160,6 +162,24 @@ class randomClass(iteratorClass): # initial weights, inherit from iterator
         return a + random.random() - 0.5 # initially random
 
 
+class identitiesClass(iteratorClass): # initial weights, inherit from iterator
+
+    def __init__(self):
+        super().__init__() # initiates parent class in initiation
+
+    def function(self, currentElement1, currentElement2, indexes1, indexes2, indexesOutput): # overite of function
+
+        value = 0
+
+        if indexesOutput[::2].count(indexesOutput[::2][0]) == len(indexesOutput[::2]): # these 2 check to see if every other index is equal, constructing the 6D equivalent of the identity matrix
+
+            if indexesOutput[1:][::2].count(indexesOutput[1:][::2][0]) == len(indexesOutput[1:][::2]):
+
+                value = 1
+
+        return value
+
+
 class ptensorApplicationClass(iteratorClass): # application of ptensors, for weight layers
 
     def __init__(self):
@@ -167,6 +187,24 @@ class ptensorApplicationClass(iteratorClass): # application of ptensors, for wei
 
     def subFunction(self, a, b): # overite of function
         return a * b # ptensor application
+    
+
+class ptensorSumClass(iteratorClass): # application of ptensors, for weight layers
+
+    def __init__(self):
+        super().__init__() # initiates parent class in initiation
+
+    def subFunction(self, a, b): # overite of function
+        return a + b # ptensor application
+
+
+class targetFuncClass(iteratorClass): # target function to be replicating
+
+    def __init__(self):
+        super().__init__() # initiates parent class in initiation
+
+    def subFunction(self, a, b): # overite of function
+        return a + 1 # simple FOR NOW  
 
 
 class activationFuncClass(iteratorClass): # application of activation func (same for each layer FOR NOW)
@@ -187,23 +225,24 @@ class activationFuncDerivativeClass(activationFuncClass): # derivative of activa
         h = 2**(-4) # infinitesimal approx
         return (self.subFunction(currentElement1 + h, currentElement2) - self.subFunction(currentElement1, currentElement2) ) / h # first principles derivative
 
-
-class targetFuncClass(iteratorClass): # target function to be replicating
-
-    def __init__(self):
-        super().__init__() # initiates parent class in initiation
-
-    def subFunction(self, a, b): # overite of function
-        return a + 1 # simple FOR NOW  
-
-
 class costFuncClass(iteratorClass): # target function to be replicating
 
     def __init__(self):
         super().__init__() # initiates parent class in initiation
 
     def subFunction(self, a, b): # overite of function
-        return (a - b)**2 # square to get absolute difference
+        return (a + b)**2 # square to get absolute difference (b term is negated prior)
+
+class costFuncDerivativeClass(costFuncClass): # derivative of cost func for backprop
+
+    def __init__(self):
+        super().__init__() # initiates parent class in initiation
+
+    def function(self, currentElement1, currentElement2, indexes1, indexes2, indexesOutput): # overite of function
+        h = 2**(-4) # infinitesimal approx
+        return (self.subFunction(currentElement1 + h, currentElement2) - self.subFunction(currentElement1, currentElement2) ) / h # first principles derivative
+
+
 
 
 
@@ -212,30 +251,86 @@ class costFuncClass(iteratorClass): # target function to be replicating
 layerCount = 2
 trainingCycles = 2
 width = 10
+learningRate = 0.1
+differentialWeightedInputs = [] # list of outputs from differentiated activation func each layer
+differentialOutputs = [] # list of differentials of outputs between layers
+differentialWeightedOutputs = [] # list of differentials of outputs between layes after having weights applied to them
+differentialIntermediateOutputs = [] # list of intermediate differentials that are a tensor prod of differentialWeightedInputs and differentialWeightedOutputs
+differentialWeights = [] # list of differentials of outputs with respect to weights
+differentials = [] # list of differentials of cost with respect to weights
+
+identities = identitiesClass()
 mainIterator = iteratorClass()
 randomiser = randomClass()
 applier = ptensorApplicationClass()
-activationFunc = activationFuncClass()
-costFunc = costFuncClass()
+adder = ptensorSumClass()
 targetFunc = targetFuncClass()
+activationFunc = activationFuncClass()
+deltaActivationFunc = activationFuncDerivativeClass()
+costFunc = costFuncClass()
+deltaCostFunc = costFuncDerivativeClass()
 
-emptyWeights = [ mainIterator.constructor([], [width, width, width, width]) for i in range(layerCount) ]
+emptyIdentity = mainIterator.constructor([], [width for i in range(6)])
+identity = identities.PtensorCalc(emptyIdentity, None, 6)
+
+emptyWeights = [ mainIterator.constructor([], [width for i in range(4)]) for j in range(layerCount) ]
 weights = [ randomiser.PtensorCalc(emptyWeights[i], None, 4) for i in range(layerCount) ]
 
+
+
+# main algo
+
 for i in range(trainingCycles):
+
+    #forward pass
     
     emptyInput = mainIterator.constructor([], [width, width])
     currentInput = randomiser.PtensorCalc(emptyInput, None, 2)
     targetOutput = targetFunc.PtensorCalc(currentInput, None, 2)
+    targetOutput = applier.PtensorCalc(targetOutput, -1, 2) # negate the target output for cost calc
+    
+
+    costDifferential = deltaCostFunc.PtensorCalc(currentInput, targetOutput, 4) # meed to fix
+    differentialOutputs.append( applier.PtensorCalc(identity, targetOutput, 2) )
 
     for j in range(layerCount):
 
-        currentInput = applier.PtensorCalc(weights[j], currentInput, 2)
-        currentInput = activationFunc.PtensorCalc(currentInput, None, 2)
+        currentInput = applier.PtensorCalc(weights[j], currentInput, 2) # in future could have 2 interlaced NNs so 2 inputs at once
+
+        differentialWeightedInputs.append( deltaActivationFunc.PtensorCalc(weights[j], currentInput, 2) ) # to be multiplied element wise with all other differentials
+        
+        differentialWeights.append( applier.PtensorCalc(differentialOutputs[j], currentInput, 4) ) # apply differential output to current input to get differential weights
+
+        differentialWeightedOutputs.append( applier.PtensorCalc(weights[j], differentialOutputs[j], 2) ) # apply weights to prev differential output
+
+        differentialIntermediateOutputs.append( applier.PtensorCalc(differentialWeightedInputs[j], differentialWeightedOutputs[j], 4) ) # ptensor prod the weighted inputs and outputs
+
+        differentialOutputs.append( applier.PtensorCalc(identity, differentialIntermediateOutputs[j+1], 2) ) # apply identity to turn into element-wise multiplication of elements
+
+        currentInput = activationFunc.PtensorCalc(currentInput, None, 2) # apply activation func to current input
+
 
     cost = costFunc.PtensorCalc(currentInput, targetOutput, 0)
 
-    print(cost)
+    # backprop;
+
+    for i in range(layerCount):
+
+        for j in range(i):
+
+            currentDifferential = applier.PtensorCalc(differentialOutputs[(layerCount-1) - j], currentDifferential, 2)
+
+        currentDifferential = applier.PtensorCalc(currentDifferential, -learningRate, 2)
+
+        currentDifferential = adder.PtensorCalc( currentDifferential, weights[(layerCount-1) - i], 4)
+
+        currentDifferential = applier.PtensorCalc( identity, currentDifferential, 2)
+
+        weights[(layerCount-1) - i] = currentDifferential
+
+
+
+print(cost)
 
 
 

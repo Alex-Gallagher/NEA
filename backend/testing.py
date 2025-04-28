@@ -1,7 +1,5 @@
 import numpy
 
-a = numpy.array(2)
+a = [1,2,3,4]
 
-b = a.tolist()
-
-print(b)
+print(a[1:][::2])
