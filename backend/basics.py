@@ -136,7 +136,7 @@ class initialWeights(iterator): # foo is an iterator
 
 
 
-X = initialWeights.constructor(self, [], [3,3,3])
+X = initialWeights.constructor(initialWeights, [], [3,3,3])
 print(X)
 initialWeights.PtensorCalc(self, X, None, [3,3,3])
 
