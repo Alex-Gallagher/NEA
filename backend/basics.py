@@ -11,7 +11,7 @@ class iterator:
     
 
     def function(self, currentElement1, currentElement2, indexes1, indexes2, indexesOutput): # blank function including indexes to be overwritten
-        result = self.subFunction(currentElement1, currentElement2)
+        result = self.subFunction(self, currentElement1, currentElement2)
         return result
     
     
@@ -27,7 +27,7 @@ class iterator:
                 list.append([])
 
             for i in list:
-                i = constructor(i, widths[1:])
+                i = self.constructor(self, i, widths[1:])
 
             return list
 
@@ -73,14 +73,14 @@ class iterator:
                     indexesOutput = index
                     currentElementOutput = currentElementOutput[indexOutput] # move down one "layer" in the output
 
-            currentElementOutput[index] = self.function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput )
+            currentElementOutput[index] = self.function(self, currentElement1, currentElement2, indexes1, indexes2, indexesOutput )
             print(currentElementOutput)
 
         output = numpyOutput.tolist()
         return output
     
 
-    def WidthCalc(input1, input2, outputOrder):
+    def WidthCalc(self, input1, input2, outputOrder):
 
         total = 1 # total number of loops that must occur to iterate through every unique index value
         widthInput1 = input1 # term used to calculate dimensions of first input
@@ -115,13 +115,13 @@ class iterator:
         return input1Widths, input2Widths, outputWidths, totalWidths, cancelledNum, total
         
         
-    def PtensorCalc(input1, input2, outputOrder): # input tensors, output tensor + desired order of output tensor, function deteminining term-by term calc
+    def PtensorCalc(self, input1, input2, outputOrder): # input tensors, output tensor + desired order of output tensor, function deteminining term-by term calc
 
-        input1Widths, input2Widths, outputWidths, totalWidths, cancelledNum, total = self.WidthCalc(input1, input2, outputOrder) # calculate widths of dimensions + number of cancelled indexes/dimensions
+        input1Widths, input2Widths, outputWidths, totalWidths, cancelledNum, total = self.WidthCalc(self, input1, input2, outputOrder) # calculate widths of dimensions + number of cancelled indexes/dimensions
 
-        output = constructor([], outputWidths) # create empty output to be overwritten
+        output = self.constructor([], outputWidths) # create empty output to be overwritten
 
-        return self.multiloop(input1, input2, output, totalWidths, len(input1Widths), len(input2Widths), cancelledNum, total)
+        return self.multiloop(self, input1, input2, output, totalWidths, len(input1Widths), len(input2Widths), cancelledNum, total)
 
 
 
@@ -136,9 +136,9 @@ class initialWeights(iterator): # foo is an iterator
 
 
 
-X = initialWeights.constructor([], [3,3,3])
+X = initialWeights.constructor(self, [], [3,3,3])
 print(X)
-initialWeights.PtensorCalc(X, None, [3,3,3])
+initialWeights.PtensorCalc(self, X, None, [3,3,3])
 
 '''
 
