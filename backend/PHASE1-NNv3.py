@@ -34,7 +34,7 @@ class iteratorClass:
         else: return 0.0
     
     
-    def multiloop(self, input1, input2, output, totalWidths, input1Order, input2Order, cancelledNum, total):
+    def multiloop(self, input1, input2, output, totalWidths, input1Order, input2Order, outputOrder, cancelledNum, total):
 
         numpyOutput = numpy.array(output) # make numpy array of output array to link the elements to the original list
 
@@ -62,7 +62,7 @@ class iteratorClass:
                     indexes2.append(index)
                     currentElement2 = currentElement2[index] # move down one "layer" in the second input
 
-                if num + 1 < input1Order + input2Order - (2 * cancelledNum): #need array containing var to change so that can change output via linked slice
+                if num + 1 < outputOrder: #need array containing var to change so that can change output via linked slice
                     indexesOutput.append(index)
                     currentElementOutput = currentElementOutput[index] # move down one "layer" in the output
 
@@ -148,7 +148,7 @@ class iteratorClass:
 
         output = self.constructor([], outputWidths) # create empty output to be overwritten
 
-        return self.multiloop(input1, input2, output, totalWidths, len(input1Widths), len(input2Widths), cancelledNum, total)
+        return self.multiloop(input1, input2, output, totalWidths, len(input1Widths), len(input2Widths), outputOrder, cancelledNum, total)
 
 
 ## Child classes
@@ -250,9 +250,9 @@ class costFuncDerivativeClass(costFuncClass): # derivative of cost func for back
 
 layerCount = 2
 trainingCycles = 2
-width = 10
+width = 3
 learningRate = 0.1
-differentialWeightedInputs = [] # list of outputs from differentiated activation func each layer
+differentialActivations = [] # list of outputs from differentiated activation func each layer
 differentialOutputs = [] # list of differentials of outputs between layers
 differentialWeightedOutputs = [] # list of differentials of outputs between layes after having weights applied to them
 differentialIntermediateOutputs = [] # list of intermediate differentials that are a tensor prod of differentialWeightedInputs and differentialWeightedOutputs
@@ -290,22 +290,22 @@ for i in range(trainingCycles):
     targetOutput = applier.PtensorCalc(targetOutput, -1, 2) # negate the target output for cost calc
     
 
-    costDifferential = deltaCostFunc.PtensorCalc(currentInput, targetOutput, 4) # meed to fix
-    differentialOutputs.append( applier.PtensorCalc(identity, targetOutput, 2) )
+    costDifferential = deltaCostFunc.PtensorCalc(currentInput, targetOutput, 4) # ptensor prod current input and target output with addition
+    costDifferential = applier.PtensorCalc(identity, costDifferential, 2) # apply identity to turn into simple addition
 
     for j in range(layerCount):
 
         currentInput = applier.PtensorCalc(weights[j], currentInput, 2) # in future could have 2 interlaced NNs so 2 inputs at once
 
-        differentialWeightedInputs.append( deltaActivationFunc.PtensorCalc(weights[j], currentInput, 2) ) # to be multiplied element wise with all other differentials
+        differentialActivations.append( deltaActivationFunc.PtensorCalc(currentInput, None, 2) ) # to be multiplied element wise with all other differentials
         
-        differentialWeights.append( applier.PtensorCalc(differentialOutputs[j], currentInput, 4) ) # apply differential output to current input to get differential weights
+        differentialWeights.append( applier.PtensorCalc(differentialOutputs[j], currentInput, 4) ) # ptensor prod differential output with current input to get differential weights
 
         differentialWeightedOutputs.append( applier.PtensorCalc(weights[j], differentialOutputs[j], 2) ) # apply weights to prev differential output
 
-        differentialIntermediateOutputs.append( applier.PtensorCalc(differentialWeightedInputs[j], differentialWeightedOutputs[j], 4) ) # ptensor prod the weighted inputs and outputs
+        differentialIntermediateOutputs.append( applier.PtensorCalc(differentialActivations[j], differentialWeightedOutputs[j], 4) ) # ptensor prod the differential activation and weighted outputs
 
-        differentialOutputs.append( applier.PtensorCalc(identity, differentialIntermediateOutputs[j+1], 2) ) # apply identity to turn into element-wise multiplication of elements
+        differentialOutputs.append( applier.PtensorCalc(identity, differentialIntermediateOutputs[j], 2) ) # apply identity to turn into element-wise multiplication of elements
 
         currentInput = activationFunc.PtensorCalc(currentInput, None, 2) # apply activation func to current input
 
