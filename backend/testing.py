@@ -1,4 +1,7 @@
-a = [1,2,3]
-b = [4,5]
+import numpy
 
-print(a[:2])
+a = numpy.array(2)
+
+b = a.tolist()
+
+print(b)
