@@ -1,10 +1,4 @@
-def DeepCopy(A, B): #copy B into A without linking - can prob find a better method to this
-    A.clear()
-    A.extend(B)
+a = [1,2,3]
+b = [4,5]
 
-Y = [1,2,3]
-X = []
-DeepCopy(X, Y)
-Y = [5]
-
-print(X, Y)
+print(a[:2])
