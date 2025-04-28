@@ -3,7 +3,7 @@ import random
 import numpy
 
 
-## Base class for all iterated objects (basically everything in NN)
+## Base class for all iterated objects (everything in NN uses such)
 
 
 class iteratorClass:
@@ -204,10 +204,10 @@ class targetFuncClass(iteratorClass): # target function to be replicating
         super().__init__() # initiates parent class in initiation
 
     def subFunction(self, a, b): # overite of function
-        return a + 1 # simple FOR NOW  
+        return a**2 + a + 1 
 
 
-class activationFuncClass(iteratorClass): # application of activation func (same for each layer FOR NOW)
+class activationFuncClass(iteratorClass): # application of activation func
 
     def __init__(self):
         super().__init__() # initiates parent class in initiation
@@ -256,12 +256,12 @@ activations = [] # list of activations
 differentialActivations = [] # list of outputs from differentiated activation func each layer
 
 
-
 differentialOutputs = [] # list of differentials of outputs between layers
 differentialWeightedOutputs = [] # list of differentials of outputs between layes after having weights applied to them
 differentialIntermediateOutputs = [] # list of intermediate differentials that are a tensor prod of differentialWeightedInputs and differentialWeightedOutputs
 differentialWeights = [] # list of differentials of outputs with respect to weights
 differentials = [] # list of differentials of cost with respect to weights
+
 
 identities = identitiesClass()
 mainIterator = iteratorClass()
@@ -336,25 +336,8 @@ for i in range(trainingCycles):
         weights[(layerCount-1) - i] = currentDifferential
 
 
-
-
 cost = costFunc.PtensorCalc(currentInput, targetOutput, 0)
 
 print(cost)
 
 
-
-'''
-
--construct weight layers
--weight layers into a function
--training function from input to output (iterator)
--training function (diff between outputs) (iterator)
--activation function (maybe list of them)
--matmul + activation func (have it inherit) (iterator)
--perform computation
--training method eg backprop or random (iterator)
-
--parameters
-
-'''
