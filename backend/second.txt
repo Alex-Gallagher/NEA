@@ -1,0 +1,111 @@
+@startuml
+title Neural Network Class Diagram - PHASE1-NNv3
+ 
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor #444444
+}
+ 
+class iteratorClass {
+  +function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput)
+  +subFunction(a, b)
+  +constructor(list, widths)
+  +multiloop(input1, input2, output, totalWidths, input1Order, input2Order, outputOrder, cancelledNum, total)
+  +WidthCalc(input1, input2, outputOrder)
+  +PtensorCalc(input1, input2, outputOrder)
+}
+ 
+' Child classes
+class randomClass {
+  +subFunction(a, b): returns random value
+}
+ 
+class identitiesClass {
+  +function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput): returns identity matrix
+}
+ 
+class ptensorApplicationClass {
+  +subFunction(a, b): returns a * b
+}
+ 
+class ptensorSumClass {
+  +subFunction(a, b): returns a + b
+}
+ 
+class targetFuncClass {
+  +subFunction(a, b): returns a + 1
+}
+ 
+class activationFuncClass {
+  +subFunction(a, b): returns sigmoid(a)
+}
+ 
+class activationFuncDerivativeClass {
+  +function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput): returns sigmoid derivative
+}
+ 
+class costFuncClass {
+  +subFunction(a, b): returns (a + b)^2
+}
+ 
+class costFuncDerivativeClass {
+  +function(currentElement1, currentElement2, indexes1, indexes2, indexesOutput): returns cost derivative
+}
+ 
+' Inheritance relationships
+iteratorClass <|-- randomClass
+iteratorClass <|-- identitiesClass
+iteratorClass <|-- ptensorApplicationClass
+iteratorClass <|-- ptensorSumClass
+iteratorClass <|-- targetFuncClass
+iteratorClass <|-- activationFuncClass
+activationFuncClass <|-- activationFuncDerivativeClass
+iteratorClass <|-- costFuncClass
+costFuncClass <|-- costFuncDerivativeClass
+ 
+' Main components
+class MainProgram {
+  -layerCount: int = 2
+  -trainingCycles: int = 20
+  -width: int = 3
+  -learningRate: float = 0.1
+  +runTraining()
+}
+ 
+class Instances {
+  -identities: identitiesClass
+  -mainIterator: iteratorClass
+  -randomiser: randomClass
+  -applier: ptensorApplicationClass
+  -targetFunc: targetFuncClass
+  -activationFunc: activationFuncClass
+  -deltaActivationFunc: activationFuncDerivativeClass
+  -costFunc: costFuncClass
+  -deltaCostFunc: costFuncDerivativeClass
+}
+ 
+' Relationships
+MainProgram --> Instances
+MainProgram --> iteratorClass
+Instances --> iteratorClass
+Instances --> identitiesClass
+Instances --> randomClass
+Instances --> ptensorApplicationClass
+Instances --> targetFuncClass
+Instances --> activationFuncClass
+Instances --> activationFuncDerivativeClass
+Instances --> costFuncClass
+Instances --> costFuncDerivativeClass
+ 
+note left of iteratorClass::PtensorCalc
+  Performs pseudo-tensor calculations
+  using generalized multi-dimensional
+  looping approach
+end note
+ 
+note bottom of activationFuncClass
+  Implements sigmoid activation:
+  1/(1 + (2^-a))
+end note
+@enduml

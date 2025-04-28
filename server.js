@@ -18,7 +18,7 @@ http.createServer(function (req, res) {
 console.log(`Listening on port ${PORT}`);
 
 const app = express();
-app.use(cors());  // Allow cross-origin requests
+app.use(cors());
 
 app.get('/run-python', (req, res) => {
     const prog = spawn('python', ['testing.py']);
