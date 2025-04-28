@@ -249,10 +249,14 @@ class costFuncDerivativeClass(costFuncClass): # derivative of cost func for back
 ## Mainprog
 
 layerCount = 2
-trainingCycles = 2
+trainingCycles = 20
 width = 3
 learningRate = 0.1
+activations = [] # list of activations
 differentialActivations = [] # list of outputs from differentiated activation func each layer
+
+
+
 differentialOutputs = [] # list of differentials of outputs between layers
 differentialWeightedOutputs = [] # list of differentials of outputs between layes after having weights applied to them
 differentialIntermediateOutputs = [] # list of intermediate differentials that are a tensor prod of differentialWeightedInputs and differentialWeightedOutputs
@@ -273,6 +277,9 @@ deltaCostFunc = costFuncDerivativeClass()
 emptyIdentity = mainIterator.constructor([], [width for i in range(6)])
 identity = identities.PtensorCalc(emptyIdentity, None, 6)
 
+emptyIdentityLarge = mainIterator.constructor([], [width for i in range(8)])
+identityLarge = identities.PtensorCalc(emptyIdentityLarge, None, 8)
+
 emptyWeights = [ mainIterator.constructor([], [width for i in range(4)]) for j in range(layerCount) ]
 weights = [ randomiser.PtensorCalc(emptyWeights[i], None, 4) for i in range(layerCount) ]
 
@@ -290,45 +297,48 @@ for i in range(trainingCycles):
     targetOutput = applier.PtensorCalc(targetOutput, -1, 2) # negate the target output for cost calc
     
 
-    costDifferential = deltaCostFunc.PtensorCalc(currentInput, targetOutput, 4) # ptensor prod current input and target output with addition
-    costDifferential = applier.PtensorCalc(identity, costDifferential, 2) # apply identity to turn into simple addition
-
     for j in range(layerCount):
 
+        activations.append(currentInput)
+        
         currentInput = applier.PtensorCalc(weights[j], currentInput, 2) # in future could have 2 interlaced NNs so 2 inputs at once
 
-        differentialActivations.append( deltaActivationFunc.PtensorCalc(currentInput, None, 2) ) # to be multiplied element wise with all other differentials
-        
-        differentialWeights.append( applier.PtensorCalc(differentialOutputs[j], currentInput, 4) ) # ptensor prod differential output with current input to get differential weights
-
-        differentialWeightedOutputs.append( applier.PtensorCalc(weights[j], differentialOutputs[j], 2) ) # apply weights to prev differential output
-
-        differentialIntermediateOutputs.append( applier.PtensorCalc(differentialActivations[j], differentialWeightedOutputs[j], 4) ) # ptensor prod the differential activation and weighted outputs
-
-        differentialOutputs.append( applier.PtensorCalc(identity, differentialIntermediateOutputs[j], 2) ) # apply identity to turn into element-wise multiplication of elements
+        differentialActivations.append( deltaActivationFunc.PtensorCalc(currentInput, None, 2) )
 
         currentInput = activationFunc.PtensorCalc(currentInput, None, 2) # apply activation func to current input
 
-
-    cost = costFunc.PtensorCalc(currentInput, targetOutput, 0)
-
     # backprop;
+
+    costDifferential = deltaCostFunc.PtensorCalc(currentInput, targetOutput, 4) # ptensor prod current input and target output with addition
+    costDifferential = applier.PtensorCalc(identity, costDifferential, 2) # apply identity to turn into simple addition
 
     for i in range(layerCount):
 
+        currentDifferential = costDifferential
+
+        currentDifferential = applier.PtensorCalc(currentDifferential, differentialActivations[(layerCount-1) - j], 4)
+        currentDifferential = applier.PtensorCalc(identity, currentDifferential, 2)
+
         for j in range(i):
+            
+            currentDifferential = applier.PtensorCalc(weights[(layerCount-1) - i], currentDifferential, 2)
 
-            currentDifferential = applier.PtensorCalc(differentialOutputs[(layerCount-1) - j], currentDifferential, 2)
+            currentDifferential = applier.PtensorCalc(currentDifferential, differentialActivations[(layerCount-1) - j], 4)
+            currentDifferential = applier.PtensorCalc(identity, currentDifferential, 2)
 
-        currentDifferential = applier.PtensorCalc(currentDifferential, -learningRate, 2)
+        currentDifferential = applier.PtensorCalc(currentDifferential, activations[(layerCount-1) - i], 4)
 
-        currentDifferential = adder.PtensorCalc( currentDifferential, weights[(layerCount-1) - i], 4)
+        currentDifferential = applier.PtensorCalc(currentDifferential, -learningRate, 4)
 
-        currentDifferential = applier.PtensorCalc( identity, currentDifferential, 2)
+        currentDifferential = applier.PtensorCalc(currentDifferential, weights[(layerCount-1) - i], 8)
+        currentDifferential = applier.PtensorCalc(identityLarge, currentDifferential, 4)
 
         weights[(layerCount-1) - i] = currentDifferential
 
 
+
+
+cost = costFunc.PtensorCalc(currentInput, targetOutput, 0)
 
 print(cost)
 
